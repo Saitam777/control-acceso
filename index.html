@@ -234,42 +234,57 @@
       
       // Enviar datos al backend
       // Enviar datos al backend
-fetch(URL_APPS_SCRIPT, {
-  method: 'POST',
-  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-  body: JSON.stringify({
-    idEmpleado: decodedText,
-    vigilante: vigilante,
-    password: password,
-    ubicacion: ubicacion
-  })
-})
-.then(response => {
-  // Verificar que la respuesta sea OK
-  if (!response.ok) {
-    throw new Error('Error HTTP: ' + response.status);
+// Enviar datos al backend usando un iframe oculto (método más compatible con Safari)
+const iframe = document.createElement('iframe');
+iframe.style.display = 'none';
+iframe.name = 'form_sender_' + Date.now();
+
+const form = document.createElement('form');
+form.method = 'POST';
+form.action = URL_APPS_SCRIPT;
+form.target = iframe.name;
+
+// Crear campos ocultos con los datos
+const campos = {
+  idEmpleado: decodedText,
+  vigilante: vigilante,
+  password: password,
+  ubicacion: ubicacion
+};
+
+for (const key in campos) {
+  if (campos.hasOwnProperty(key)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = key;
+    input.value = campos[key];
+    form.appendChild(input);
   }
-  return response.text(); // Leer como texto primero
-})
-.then(texto => {
-  // Intentar parsear el texto como JSON
-  try {
-    const data = JSON.parse(texto);
-    mostrarResultado(data);
-  } catch (e) {
-    // Si no es JSON, mostrar el texto crudo para depurar
-    mostrarError({message: 'Respuesta inválida: ' + texto.substring(0, 200)});
-  }
-})
-.catch(err => {
-  mostrarError({message: err.message});
-})
-.finally(() => {
+}
+
+document.body.appendChild(iframe);
+document.body.appendChild(form);
+form.submit();
+
+// Limpiar después de enviar
+setTimeout(() => {
+  document.body.removeChild(form);
+  document.body.removeChild(iframe);
+}, 2000);
+
+// Mostrar un mensaje temporal mientras se procesa (sin leer la respuesta)
+setTimeout(() => {
+  const div = document.getElementById('resultado');
+  div.className = 'autorizado';
+  div.innerHTML = '<h2>✅ Escaneo enviado</h2><p>El registro se está procesando en el sistema.</p>';
+  
+  // Reactivar el escáner
   setTimeout(() => {
     escaneoActivo = true;
+    document.getElementById('resultado').style.display = 'none';
     iniciarEscaneo();
-  }, 5000);
-});
+  }, 3000);
+}, 1000);
       
       if (html5QrCode) {
         html5QrCode.stop().catch(() => {});
