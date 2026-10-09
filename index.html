@@ -332,10 +332,10 @@ setTimeout(() => {
       div.innerHTML = '<h2>❌ Error</h2><p>' + error.message + '</p>';
     }
 
-    // Cargar vigilantes desde el backend
 function cargarVigilantes() {
-  google.script.run
-    .withSuccessHandler(function(vigilantes) {
+  fetch(URL_APPS_SCRIPT + '?accion=vigilantes')
+    .then(response => response.json())
+    .then(vigilantes => {
       const select = document.getElementById('nombreVigilante');
       select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
       
@@ -351,10 +351,11 @@ function cargarVigilantes() {
         select.appendChild(option);
       });
     })
-    .withFailureHandler(function(err) {
+    .catch(err => {
       console.error('Error al cargar vigilantes:', err);
-    })
-    .obtenerVigilantes();
+      document.getElementById('nombreVigilante').innerHTML =
+        '<option value="">Error al cargar vigilantes</option>';
+    });
 }
     
     window.addEventListener('load', function() {
