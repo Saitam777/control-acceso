@@ -120,21 +120,23 @@
   <div class="container">
     <h1>🔐 Control de Acceso</h1>
     
-    <div class="vigilante-info">
-      <label>👮 Vigilante:</label>
-      <input type="text" id="nombreVigilante" placeholder="Nombre del vigilante" required>
-      
-      <label>🔑 Contraseña:</label>
-      <input type="password" id="password" placeholder="Contraseña de acceso" required>
-      
-      <label>📍 Ubicación:</label>
-      <select id="ubicacion">
-        <option>Entrada Principal</option>
-        <option>Puerta Trasera</option>
-        <option>Estacionamiento</option>
-        <option>Almacén</option>
-      </select>
-    </div>
+   <div class="vigilante-info">
+  <label>👮 Vigilante:</label>
+  <select id="nombreVigilante" required>
+    <option value="">-- Cargando vigilantes... --</option>
+  </select>
+  
+  <label>🔑 Contraseña:</label>
+  <input type="password" id="password" placeholder="Contraseña personal" required>
+  
+  <label>📍 Ubicación:</label>
+  <select id="ubicacion">
+    <option>Entrada Principal</option>
+    <option>Puerta Trasera</option>
+    <option>Estacionamiento</option>
+    <option>Almacén</option>
+  </select>
+</div>
     
     <div id="mensaje-estado">📸 Iniciando cámara...</div>
     
@@ -329,10 +331,36 @@ setTimeout(() => {
       div.className = 'denegado';
       div.innerHTML = '<h2>❌ Error</h2><p>' + error.message + '</p>';
     }
+
+    // Cargar vigilantes desde el backend
+function cargarVigilantes() {
+  google.script.run
+    .withSuccessHandler(function(vigilantes) {
+      const select = document.getElementById('nombreVigilante');
+      select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
+      
+      if (!vigilantes || vigilantes.length === 0) {
+        select.innerHTML = '<option value="">No hay vigilantes registrados</option>';
+        return;
+      }
+      
+      vigilantes.forEach(function(v) {
+        const option = document.createElement('option');
+        option.value = v.nombre;
+        option.textContent = v.nombre;
+        select.appendChild(option);
+      });
+    })
+    .withFailureHandler(function(err) {
+      console.error('Error al cargar vigilantes:', err);
+    })
+    .obtenerVigilantes();
+}
     
     window.addEventListener('load', function() {
-      setTimeout(iniciarEscaneo, 1000);
-    });
+  cargarVigilantes();
+  setTimeout(iniciarEscaneo, 1500);
+});
   </script>
 </body>
 </html>
